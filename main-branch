@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Wellness Tracker</title>
+<style>
+  :root {
+    --primary: #7C3AED;
+    --primary-light: #A78BFA;
+    --primary-dark: #5B21B6;
+    --secondary: #3B82F6;
+    --secondary-light: #93C5FD;
+    --bg: #0F0A1E;
+    --bg-card: #1A1035;
+    --bg-card2: #221545;
+    --text: #E9E4FF;
+    --text-muted: #9B8EC4;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --border: #3D2F6E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+    padding: 20px 20px 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header .date { font-size: 13px; opacity: 0.8; }
+
+  .streak-badge {
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .nav {
+    display: flex;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 80px;
+    z-index: 99;
+    overflow-x: auto;
+  }
+
+  .nav button {
+    flex: 1;
+    min-width: 80px;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav button.active {
+    color: var(--primary-light);
+    border-bottom-color: var(--primary-light);
+  }
+
+  .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .emoji { font-size: 18px; }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .check-item:last-child { border-bottom: none; }
+
+  .check-item input[type="checkbox"] { display: none; }
+
+  .check-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .check-item.checked .check-box {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .check-item.checked .check-box::after {
+    content: '✓';
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .check-item.checked .check-label {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .check-label { font-size: 14px; flex: 1; }
+
+  .check-optional {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-card2);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .input-row:last-child { border-bottom: none; }
+
+  .input-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 120px;
+  }
+
+  input[type="time"],
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+  }
+
+  input[type="time"]:focus,
+  input[type="text"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--primary);
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  .toggle-group { display: flex; gap: 6px; }
+
+  .toggle-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active-healthy {
+    background: rgba(16,185,129,0.2);
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  .toggle-btn.active-cheat {
+    background: rgba(245,158,11,0.2);
+    border-color: var(--warning);
+    color: var(--warning);
+  }
+
+  .slider-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slider-row:last-child { border-bottom: none; }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .slider-label { font-size: 13px; }
+
+  .slider-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-light);
+    min-width: 20px;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+  }
+
+  .flag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .flag-red { background: rgba(239,68,68,0.2); color: var(--danger); }
+  .flag-green { background: rgba(16,185,129,0.2); color: var(--success); }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+
+  .add-btn:hover { border-color: var(--primary-light); color: var(--primary-light); }
+
+  .save-btn {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: opacity 0.2s;
+  }
+
+  .save-btn:hover { opacity: 0.9; }
+
+  .supplement-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .supplement-item:last-child { border-bottom: none; }
+
+  .supp-name { flex: 1; font-size: 14px; }
+  .supp-dose { font-size: 12px; color: var(--text-muted); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .delete-btn:hover { color: var(--danger); }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-card2);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--primary-light); }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .trend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trend-row:last-child { border-bottom: none; }
+
+  .trend-label { font-size: 13px; }
+
+  .trend-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+
+  .trend-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary-light));
+    transition: width 0.5s;
+  }
+
+  .trend-val { font-size: 12px; color: var(--primary-light); font-weight: 600; min-width: 30px; text-align: right; }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .date-nav button {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+
+  .date-nav span { font-size: 14px; font-weight: 600; }
+
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; }
+
+  .history-item {
+    background: var(--bg-card2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .history-date { font-size: 13px; font-weight: 600; }
+  .history-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .history-score { font-size: 20px; font-weight: 700; color: var(--primary-light); }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+
+  .bottom-nav button {
+    flex: 1;
+    padding: 12px 4px 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.2s;
+  }
+
+  .bottom-nav button .icon { font-size: 20px; }
+  .bottom-nav button.active { color: var(--primary-light); }
+
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  .progress-info { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--bg-card);
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal h3 { font-size: 16px; margin-bottom: 16px; }
+  .modal input[type="text"] { margin-bottom: 10px; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .modal-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .btn-cancel { background: var(--bg-card2); color: var(--text-muted); }
+  .btn-confirm { background: var(--primary); color: white; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>🌟 Wellness Tracker</h1>
+      <div class="date" id="headerDate"></div>
+    </div>
+    <div class="streak-badge" id="streakBadge">🔥 0 day streak</div>
+  </div>
+  <div class="progress-info" id="progressInfo">Loading...</div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showSection('today')">Today</button>
+  <button onclick="showSection('supplements')">Supplements</button>
+  <button onclick="showSection('habits')">Habits</button>
+  <button onclick="showSection('analytics')">Analytics</button>
+  <button onclick="showSection('history')">History</button>
+</div>
+
+<div class="content">
+
+  <div class="tab active" id="tab-today">
+
+    <div class="date-nav">
+      <button onclick="changeDate(-1)">‹</button>
+      <span id="dateDisplay"></span>
+      <button onclick="changeDate(1)">›</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">🌅</span> Morning Routine</div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Wake up time</div>
+        <input type="time" id="wakeTime" onchange="autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Social media</div>
+        <input type="number" id="socialMins" placeholder="mins" min="0" max="60" style="width:80px" onchange="checkSocialMedia(); autoSave()">
+        <span id="socialFlag" class="flag" style="display:none"></span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this, 'shower')">
+        <div class="check-box"></div>
+        <div class="check-label">Shower ✓</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this, 'breakfast')">
+        <div class="check-box"></div>
+        <div class="check-label">Breakfast / Protein shake</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this, 'physioOnTime')">
+        <div class="check-box"></div>
+        <div class="check-label">Left for physio on time</div>
+        <span class="check-optional">optional</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">🏋️</span> Physiotherapy / Gym</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this, 'physioAttended')">
+        <div class="check-box"></div>
+        <div class="check-label">Attended session</div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Session type</div>
+        <select id="sessionType" onchange="autoSave()">
+          <option value="">— optional —</option>
+          <option>Physiotherapy</option>
+          <option>Gym</option>
+          <option>Home workout</option>
+        </select>
+      </div>
+      <div class="input-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+        <div class="input-label">Workout details</div>
+        <textarea id="workoutDetails" placeholder="e.g. squats, resistance bands, stretching..." onchange="autoSave()"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">💼</span> Work & Lunch</div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this, 'wentToWork')">
+        <div class="check-box"></div>
+        <div class="check-label">Went into work today</div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Lunch</div>
+        <input type="text" id="lunchText" placeholder="What did you eat? (optional)" onchange="autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Lunch quality</div>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="lunchHealthy" onclick="setMealQuality('lunch', 'healthy')">✅ Healthy</button>
+          <button class="toggle-btn" id="lunchCheat" onclick="setMealQuality('lunch', 'cheat')">🍕 Cheat</button>
+        </div>
+      </div>
+      <div class="input-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+        <div class="input-label">Nutrition details <span class="check-optional">optional</span></div>
+        <textarea id="lunchNutrition" placeholder="Calories, macros... (only when you feel like it)" onchange="autoSave()"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">🌙</span> Evening</div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Dinner</div>
+        <input type="text" id="dinnerText" placeholder="What did you eat? (optional)" onchange="autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Dinner quality</div>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="dinnerHealthy" onclick="setMealQuality('dinner', 'healthy')">✅ Healthy</button>
+          <button class="toggle-btn" id="dinnerCheat" onclick="setMealQuality('dinner', 'cheat')">🍕 Cheat</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Got home at</div>
+        <input type="time" id="homeTime" onchange="autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Bedtime</div>
+        <input type="time" id="bedTime" onchange="calcSleep(); autoSave()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">💊</span> Supplements</div>
+      </div>
+      <div id="suppChecklist"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">😴</span> Sleep</div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Wake up time</div>
+        <input type="time" id="wakeTime2" onchange="calcSleep(); autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Hours slept</div>
+        <input type="number" id="sleepHours" placeholder="auto-calculated" min="0" max="24" step="0.5" onchange="autoSave()">
+      </div>
+      <div class="input-row">
+        <div class="input-label">Sleep quality</div>
+        <div style="flex:1">
+          <div class="slider-header">
+            <span></span>
+            <span class="slider-value" id="sleepQualVal">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="sleepQuality"
+            oninput="document.getElementById('sleepQualVal').textContent=this.value; autoSave()">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-label">Steps today</div>
+        <input type="number" id="stepsToday" placeholder="from Fitbit / Apple Health" onchange="autoSave()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">🧠</span> Mental Health</div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">😰 Anxiety</span>
+          <span class="slider-value" id="anxietyVal">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="anxiety"
+          oninput="document.getElementById('anxietyVal').textContent=this.value; autoSave()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">😊 Happiness</span>
+          <span class="slider-value" id="happinessVal">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="happiness"
+          oninput="document.getElementById('happinessVal').textContent=this.value; autoSave()">
+      </div>
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">😤 Stress</span>
+          <span class="slider-value" id="stressVal">5</span>
+        </div>
+        <input type="range" min="1" max="10" value="5" id="stress"
+          oninput="document.getElementById('stressVal').textContent=this.value; autoSave()">
+      </div>
+      <div class="input-row" style="flex-direction: column; align-items: flex-start; gap: 6px; border-bottom: none;">
+        <div class="input-label">Notable event <span class="check-optional">optional</span></div>
+        <textarea id="mentalNote" placeholder="Anything stressful or great that happened today..." onchange="autoSave()"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">✅</span> Habits</div>
+      </div>
+      <div id="habitChecklist"></div>
+    </div>
+
+    <button class="save-btn" onclick="saveDay()">💾 Save Today's Log</button>
+  </div>
+
+  <div class="tab" id="tab-supplements">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">💊</span> My Supplements & Medications</div>
+      </div>
+      <div id="suppList"></div>
+      <button class="add-btn" onclick="openModal('supplement')">+ Add supplement or medication</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">🔔</span> Reminder</div>
+      <div class="input-row">
+        <div class="input-label">Daily reminder</div>
+        <input type="time" id="suppReminderTime" value="21:00" onchange="scheduleSuppReminder()">
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">Enable browser notifications to receive supplement reminders.</p>
+      <button class="save-btn" style="margin-top: 10px;" onclick="requestNotificationPermission()">Enable Notifications</button>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-habits">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="emoji">✅</span> My Habits</div>
+      </div>
+      <div id="habitList"></div>
+      <button class="add-btn" onclick="openModal('habit')">+ Add new habit</button>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-analytics">
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">📊</span> Last 30 Days</div>
+      <div class="stat-grid" id="statsGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">🧠</span> Mental Health Trends</div>
+      <div id="mentalTrends"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">😴</span> Sleep Trends</div>
+      <div id="sleepTrends"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">🏃</span> Activity</div>
+      <div id="activityTrends"></div>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-history">
+    <div class="card">
+      <div class="card-title" style="margin-bottom: 14px;"><span class="emoji">📅</span> Past Entries</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <button class="active" onclick="showSection('today')"><span class="icon">📋</span>Today</button>
+  <button onclick="showSection('supplements')"><span class="icon">💊</span>Supps</button>
+  <button onclick="showSection('habits')"><span class="icon">✅</span>Habits</button>
+  <button onclick="showSection('analytics')"><span class="icon">📊</span>Analytics</button>
+  <button onclick="showSection('history')"><span class="icon">📅</span>History</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add Item</h3>
+    <input type="text" id="modalName" placeholder="Name">
+    <input type="text" id="modalDose" placeholder="Dose / details (optional)">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmModal()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentDate = todayStr();
+let modalMode = '';
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function getState() {
+  return JSON.parse(localStorage.getItem('wt_data') || '{}');
+}
+
+function setState(data) {
+  localStorage.setItem('wt_data', JSON.stringify(data));
+}
+
+function getDayData(date) {
+  return getState()[date] || {};
+}
+
+function setDayData(date, data) {
+  const state = getState();
+  state[date] = data;
+  setState(state);
+}
+
+function getSupplements() {
+  return JSON.parse(localStorage.getItem('wt_supplements') || JSON.stringify([
+    { id: 1, name: 'Vitamin D', dose: '1000 IU' },
+    { id: 2, name: 'Omega-3', dose: '1g' },
+    { id: 3, name: 'Magnesium', dose: '400mg' }
+  ]));
+}
+
+function setSupplements(supps) {
+  localStorage.setItem('wt_supplements', JSON.stringify(supps));
+}
+
+function getHabits() {
+  return JSON.parse(localStorage.getItem('wt_habits') || JSON.stringify([
+    { id: 1, name: 'Piano practice', details: '' },
+    { id: 2, name: 'Tennis', details: '' },
+    { id: 3, name: 'Home exercises', details: '' }
+  ]));
+}
+
+function setHabits(habits) {
+  localStorage.setItem('wt_habits', JSON.stringify(habits));
+}
+
+function showSection(section) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + section).classList.add('active');
+  const idx = ['today','supplements','habits','analytics','history'].indexOf(section);
+  document.querySelectorAll('.nav button')[idx]?.classList.add('active');
+  document.querySelectorAll('.bottom-nav button')[idx]?.classList.add('active');
+  if (section === 'analytics') renderAnalytics();
+  if (section === 'history') renderHistory();
+  if (section === 'supplements') renderSuppList();
+  if (section === 'habits') renderHabitList();
+}
+
+function changeDate(delta) {
+  const d = new Date(currentDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const newDate = d.toISOString().split('T')[0];
+  if (newDate <= todayStr()) { currentDate = newDate; loadDay(); }
+}
+
+function updateDateDisplay() {
+  const d = new Date(currentDate + 'T12:00:00');
+  document.getElementById('dateDisplay').textContent =
+    currentDate === todayStr() ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('headerDate').textContent =
+    new Date(todayStr() + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function loadDay() {
+  updateDateDisplay();
+  const data = getDayData(currentDate);
+  setVal('wakeTime', data.wakeTime || '');
+  setVal('socialMins', data.socialMins || '');
+  setCheck('shower', data.shower);
+  setCheck('breakfast', data.breakfast);
+  setCheck('physioOnTime', data.physioOnTime);
+  setCheck('physioAttended', data.physioAttended);
+  setVal('sessionType', data.sessionType || '');
+  setVal('workoutDetails', data.workoutDetails || '');
+  setCheck('wentToWork', data.wentToWork);
+  setVal('lunchText', data.lunchText || '');
+  setVal('lunchNutrition', data.lunchNutrition || '');
+  setMealQualityUI('lunch', data.lunchQuality || '');
+  setVal('dinnerText', data.dinnerText || '');
+  setMealQualityUI('dinner', data.dinnerQuality || '');
+  setVal('homeTime', data.homeTime || '');
+  setVal('bedTime', data.bedTime || '');
+  setVal('wakeTime2', data.wakeTime2 || data.wakeTime || '');
+  setVal('sleepHours', data.sleepHours || '');
+  setSlider('sleepQuality', 'sleepQualVal', data.sleepQuality || 5);
+  setVal('stepsToday', data.stepsToday || '');
+  setSlider('anxiety', 'anxietyVal', data.anxiety || 5);
+  setSlider('happiness', 'happinessVal', data.happiness || 5);
+  setSlider('stress', 'stressVal', data.stress || 5);
+  setVal('mentalNote', data.mentalNote || '');
+  checkSocialMedia();
+  renderSuppChecklist(data.supps || {});
+  renderHabitChecklist(data.habits || {});
+  updateProgress();
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+function setSlider(sliderId, displayId, val) {
+  const el = document.getElementById(sliderId);
+  const disp = document.getElementById(displayId);
+  if (el) el.value = val;
+  if (disp) disp.textContent = val;
+}
+
+function setCheck(key, val) {
+  document.querySelectorAll('#tab-today .check-item').forEach(item => {
+    if (item.getAttribute('onclick')?.includes(`'${key}'`)) {
+      item.classList.toggle('checked', !!val);
+    }
+  });
+}
+
+function toggleCheck(el, key) {
+  el.classList.toggle('checked');
+  autoSave();
+}
+
+function setMealQuality(meal, quality) {
+  setMealQualityUI(meal, quality);
+  autoSave();
+}
+
+function setMealQualityUI(meal, quality) {
+  const healthy = document.getElementById(meal + 'Healthy');
+  const cheat = document.getElementById(meal + 'Cheat');
+  if (!healthy) return;
+  healthy.className = 'toggle-btn' + (quality === 'healthy' ? ' active-healthy' : '');
+  cheat.className = 'toggle-btn' + (quality === 'cheat' ? ' active-cheat' : '');
+}
+
+function checkSocialMedia() {
+  const mins = parseInt(document.getElementById('socialMins').value) || 0;
+  const flag = document.getElementById('socialFlag');
+  if (mins === 0) { flag.style.display = 'none'; return; }
+  flag.style.display = 'inline';
+  if (mins > 10) {
+    flag.textContent = '⚠️ Over limit!';
+    flag.className = 'flag flag-red';
+  } else {
+    flag.textContent = '✅ Under 10 mins';
+    flag.className = 'flag flag-green';
+  }
+}
+
+function calcSleep() {
+  const bedTime = document.getElementById('bedTime').value;
+  const wakeTime = document.getElementById('wakeTime2').value;
+  if (!bedTime || !wakeTime) return;
+  let bed = new Date('2000-01-01T' + bedTime);
+  let wake = new Date('2000-01-01T' + wakeTime);
+  if (wake <= bed) wake.setDate(wake.getDate() + 1);
+  document.getElementById('sleepHours').value = ((wake - bed) / 3600000).toFixed(1);
+}
+
+function renderSuppChecklist(suppData) {
+  const supps = getSupplements();
+  const div = document.getElementById('suppChecklist');
+  if (!supps.length) { div.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:10px 0;">No supplements added yet.</p>'; return; }
+  div.innerHTML = supps.map(s => `
+    <div class="check-item ${suppData[s.id] ? 'checked' : ''}" onclick="toggleSuppCheck(this, ${s.id})">
+      <div class="check-box"></div>
+      <div class="check-label">${s.name}</div>
+      ${s.dose ? `<span class="supp-dose">${s.dose}</span>` : ''}
+    </div>`).join('');
+}
+
+function toggleSuppCheck(el, id) { el.classList.toggle('checked'); autoSave(); }
+
+function renderHabitChecklist(habitData) {
+  const habits = getHabits();
+  const div = document.getElementById('habitChecklist');
+  if (!habits.length) { div.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:10px 0;">No habits added yet.</p>'; return; }
+  div.innerHTML = habits.map(h => `
+    <div class="check-item ${habitData[h.id] ? 'checked' : ''}" onclick="toggleHabitCheck(this, ${h.id})">
+      <div class="check-box"></div>
+      <div class="check-label">${h.name}</div>
+      ${h.details ? `<span class="supp-dose">${h.details}</span>` : ''}
+    </div>`).join('');
+}
+
+function toggleHabitCheck(el, id) { el.classList.toggle('checked'); autoSave(); }
+
+function renderSuppList() {
+  const supps = getSupplements();
+  const div = document.getElementById('suppList');
+  div.innerHTML = supps.length ? supps.map(s => `
+    <div class="supplement-item">
+      <div><div class="supp-name">${s.name}</div>${s.dose ? `<div class="supp-dose">${s.dose}</div>` : ''}</div>
+      <button class="delete-btn" onclick="deleteSupp(${s.id})">🗑</button>
+    </div>`).join('') : '<p style="color:var(--text-muted);font-size:13px;padding:10px 0;">No supplements yet.</p>';
+}
+
+function deleteSupp(id) {
+  setSupplements(getSupplements().filter(s => s.id !== id));
+  renderSuppList();
+  showToast('Supplement removed');
+}
+
+function renderHabitList() {
+  const habits = getHabits();
+  const div = document.getElementById('habitList');
+  div.innerHTML = habits.length ? habits.map(h => `
+    <div class="supplement-item">
+      <div><div class="supp-name">${h.name}</div>${h.details ? `<div class="supp-dose">${h.details}</div>` : ''}</div>
+      <button class="delete-btn" onclick="deleteHabit(${h.id})">🗑</button>
+    </div>`).join('') : '<p style="color:var(--text-muted);font-size:13px;padding:10px 0;">No habits yet.</p>';
+}
+
+function deleteHabit(id) {
+  setHabits(getHabits().filter(h => h.id !== id));
+  renderHabitList();
+  showToast('Habit removed');
+}
+
+function openModal(mode) {
+  modalMode = mode;
+  document.getElementById('modalTitle').textContent = mode === 'supplement' ? '💊 Add Supplement / Medication' : '✅ Add New Habit';
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalDose').value = '';
+  document.getElementById('modalDose').placeholder = mode === 'supplement' ? 'Dose (e.g. 400mg) — optional' : 'Details (e.g. 30 mins) — optional';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+function confirmModal() {
+  const name = document.getElementById('modalName').value.trim();
+  if (!name) return;
+  const dose = document.getElementById('modalDose').value.trim();
+  if (modalMode === 'supplement') {
+    const supps = getSupplements();
+    supps.push({ id: Date.now(), name, dose });
+    setSupplements(supps);
+    renderSuppList();
+    showToast('Supplement added!');
+  } else {
+    const habits = getHabits();
+    habits.push({ id: Date.now(), name, details: dose });
+    setHabits(habits);
+    renderHabitList();
+    showToast('Habit added!');
+  }
+  closeModal();
+}
+
+function collectDayData() {
+  const supps = {};
+  document.querySelectorAll('#suppChecklist .check-item').forEach(el => {
+    const m = el.getAttribute('onclick')?.match(/toggleSuppCheck\(this, (\d+)\)/);
+    if (m) supps[m[1]] = el.classList.contains('checked');
+  });
+  const habits = {};
+  document.querySelectorAll('#habitChecklist .check-item').forEach(el => {
+    const m = el.getAttribute('onclick')?.match(/toggleHabitCheck\(this, (\d+)\)/);
+    if (m) habits[m[1]] = el.classList.contains('checked');
+  });
+  const checks = {};
+  ['shower','breakfast','physioOnTime','physioAttended','wentToWork'].forEach(key => {
+    const item = document.querySelector(`#tab-today .check-item[onclick*="'${key}'"]`);
+    checks[key] = item ? item.classList.contains('checked') : false;
+  });
+  const lH = document.getElementById('lunchHealthy');
+  const lC = document.getElementById('lunchCheat');
+  const dH = document.getElementById('dinnerHealthy');
+  const dC = document.getElementById('dinnerCheat');
+  return {
+    ...checks,
+    wakeTime: document.getElementById('wakeTime').value,
+    socialMins: document.getElementById('socialMins').value,
+    sessionType: document.getElementById('sessionType').value,
+    workoutDetails: document.getElementById('workoutDetails').value,
+    lunchText: document.getElementById('lunchText').value,
+    lunchNutrition: document.getElementById('lunchNutrition').value,
+    lunchQuality: lH?.classList.contains('active-healthy') ? 'healthy' : lC?.classList.contains('active-cheat') ? 'cheat' : '',
+    dinnerText: document.getElementById('dinnerText').value,
+    dinnerQuality: dH?.classList.contains('active-healthy') ? 'healthy' : dC?.classList.contains('active-cheat') ? 'cheat' : '',
+    homeTime: document.getElementById('homeTime').value,
+    bedTime: document.getElementById('bedTime').value,
+    wakeTime2: document.getElementById('wakeTime2').value,
+    sleepHours: document.getElementById('sleepHours').value,
+    sleepQuality: document.getElementById('sleepQuality').value,
+    stepsToday: document.getElementById('stepsToday').value,
+    anxiety: document.getElementById('anxiety').value,
+    happiness: document.getElementById('happiness').value,
+    stress: document.getElementById('stress').value,
+    mentalNote: document.getElementById('mentalNote').value,
+    supps, habits,
+    savedAt: new Date().toISOString()
+  };
+}
+
+let autoSaveTimer;
+function autoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => { setDayData(currentDate, collectDayData()); updateProgress(); }, 500);
+}
+
+function saveDay() {
+  setDayData(currentDate, collectDayData());
+  updateProgress();
+  showToast('✅ Saved!');
+}
+
+function updateProgress() {
+  const data = getDayData(currentDate);
+  const checks = ['shower','breakfast','physioAttended','wentToWork'].filter(k => data[k]).length;
+  const suppsDone = Object.values(data.supps || {}).filter(Boolean).length;
+  const total = 4 + getSupplements().length;
+  document.getElementById('progressInfo').textContent = `${checks + suppsDone}/${total} tasks completed today`;
+  let streak = 0;
+  let d = new Date(todayStr() + 'T12:00:00');
+  const state = getState();
+  while (state[d.toISOString().split('T')[0]]) { streak++; d.setDate(d.getDate() - 1); }
+  document.getElementById('streakBadge').textContent = `🔥 ${streak} day streak`;
+}
+
+function renderAnalytics() {
+  const state = getState();
+  const dates = Object.keys(state).sort().slice(-30);
+  if (!dates.length) {
+    document.getElementById('statsGrid').innerHTML = '<p style="color:var(--text-muted);font-size:13px;grid-column:span 2;">No data yet. Start logging!</p>';
+    return;
+  }
+  const avg = arr => arr.length ? (arr.reduce((a,b) => a + parseFloat(b||0), 0) / arr.length).toFixed(1) : '—';
+  const sleepHrs = dates.map(d => state[d].sleepHours).filter(Boolean);
+  const steps = dates.map(d => state[d].stepsToday).filter(Boolean);
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${avg(sleepHrs)}</div><div class="stat-label">Avg Sleep (hrs)</div></div>
+    <div class="stat-card"><div class="stat-value">${steps.length ? Math.round(parseFloat(avg(steps))).toLocaleString() : '—'}</div><div class="stat-label">Avg Steps</div></div>
+    <div class="stat-card"><div class="stat-value">${dates.length}</div><div class="stat-label">Days Logged</div></div>
+    <div class="stat-card"><div class="stat-value">${dates.filter(d => state[d].physioAttended).length}</div><div class="stat-label">Physio Sessions</div></div>`;
+  const mkTrend = (label, arr) => {
+    if (!arr.length) return '';
+    const a = parseFloat(avg(arr));
+    return `<div class="trend-row"><div class="trend-label">${label}</div><div class="trend-bar-wrap"><div class="trend-bar" style="width:${(a/10)*100}%"></div></div><div class="trend-val">${a}/10</div></div>`;
+  };
+  const anxiety = dates.map(d => state[d].anxiety).filter(Boolean);
+  const happiness = dates.map(d => state[d].happiness).filter(Boolean);
+  const stress = dates.map(d => state[d].stress).filter(Boolean);
+  document.getElementById('mentalTrends').innerHTML =
+    (mkTrend('😰 Anxiety', anxiety) + mkTrend('😊 Happiness', happiness) + mkTrend('😤 Stress', stress)) ||
+    '<p style="color:var(--text-muted);font-size:13px;">No mental health data yet.</p>';
+  const r7 = dates.slice(-7).map(d => state[d].sleepHours).filter(Boolean);
+  document.getElementById('sleepTrends').innerHTML = `
+    <div class="trend-row"><div class="trend-label">Last 7 days</div><div class="trend-bar-wrap"><div class="trend-bar" style="width:${Math.min((parseFloat(avg(r7))/10)*100,100)}%"></div></div><div class="trend-val">${avg(r7)} hrs</div></div>
+    <div class="trend-row"><div class="trend-label">Last 30 days</div><div class="trend-bar-wrap"><div class="trend-bar" style="width:${Math.min((parseFloat(avg(sleepHrs))/10)*100,100)}%"></div></div><div class="trend-val">${avg(sleepHrs)} hrs</div></div>`;
+  document.getElementById('activityTrends').innerHTML = `
+    <div class="trend-row"><div class="trend-label">🏋️ Physio sessions</div><div class="trend-bar-wrap"><div class="trend-bar" style="width:${(dates.filter(d=>state[d].physioAttended).length/dates.length)*100}%"></div></div><div class="trend-val">${dates.filter(d=>state[d].physioAttended).length}</div></div>
+    <div class="trend-row"><div class="trend-label">💼 Work days</div><div class="trend-bar-wrap"><div class="trend-bar" style="width:${(dates.filter(d=>state[d].wentToWork).length/dates.length)*100}%"></div></div><div class="trend-val">${dates.filter(d=>state[d].wentToWork).length}</div></div>`;
+}
+
+function renderHistory() {
+  const state = getState();
+  const dates = Object.keys(state).sort().reverse();
+  const div = document.getElementById('historyList');
+  if (!dates.length) { div.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No entries yet.</p>'; return; }
+  div.innerHTML = dates.map(date => {
+    const d = state[date];
+    const checks = ['shower','breakfast','physioAttended','wentToWork'].filter(k => d[k]).length;
+    const mood = d.happiness ? Math.round((parseInt(d.happiness) + (10-parseInt(d.anxiety||5)) + (10-parseInt(d.stress||5)))/3) : null;
+    const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return `<div class="history-item" onclick="jumpToDate('${date}')">
+      <div><div class="history-date">${label}</div><div class="history-meta">${checks} tasks · ${d.sleepHours ? d.sleepHours+' hrs sleep' : 'no sleep data'} · ${d.stepsToday ? parseInt(d.stepsToday).toLocaleString()+' steps' : 'no steps'}</div></div>
+      ${mood !== null ? `<div class="history-score">${mood}/10</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function jumpToDate(date) { currentDate = date; showSection('today'); loadDay(); }
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) { showToast('Not supported'); return; }
+  Notification.requestPermission().then(p => showToast(p === 'granted' ? 'Notifications enabled!' : 'Blocked'));
+}
+
+function scheduleSuppReminder() { localStorage.setItem('wt_supp_reminder', document.getElementById('suppReminderTime').value); }
+
+function checkSuppReminder() {
+  const time = localStorage.getItem('wt_supp_reminder') || '21:00';
+  const now = new Date();
+  const [h,m] = time.split(':').map(Number);
+  if (now.getHours()===h && now.getMinutes()===m) {
+    const data = getDayData(todayStr());
+    const taken = Object.values(data.supps||{}).filter(Boolean).length;
+    const total = getSupplements().length;
+    if (taken < total && Notification.permission==='granted') {
+      new Notification('💊 Supplement Reminder', { body: `${total-taken} supplement(s) left to take!` });
+    }
+  }
+}
+
+setInterval(checkSuppReminder, 60000);
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+loadDay();
+</script>
+</body>
+</html>
